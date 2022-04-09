@@ -37,6 +37,10 @@ class StackOverflowSuite extends munit.FunSuite:
     assert(instantiatable, "Can't instantiate a StackOverflow object")
   }
 
+  test("Median") {
+    assertEquals(StackOverflow.median(Seq(0, 1, 2, 3)), 1)
+    assertEquals(StackOverflow.median(Seq(0, 1, 2, 3, 4)), 2)
+  }
 
   import scala.concurrent.duration.given
   override val munitTimeout = 300.seconds
