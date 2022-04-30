@@ -180,11 +180,11 @@ class StackOverflow extends StackOverflowInterface with Serializable:
     // and then compute the new means of each group of points. Finally, compute
     // a Map that associate the old `means` values to their new values
     val newMeansMap: scala.collection.Map[(Int, Int), (Int, Int)] =
-    vectors
-      .map(v => (findClosest(v, means), v))
+      vectors.map(v => (findClosest(v, means), v))
       .groupByKey()
-      .map { case (mean, closestVectors) => (mean, averageVectors(closestVectors)) }
+      .mapValues(averageVectors)
       .collect().toMap
+
 
     val newMeans: Array[(Int, Int)] = means.map(newMeansMap)
     val distance = euclideanDistance(means, newMeans)
@@ -208,8 +208,6 @@ class StackOverflow extends StackOverflowInterface with Serializable:
       newMeans
 
 
-
-
   //
   //
   //  Kmeans utilities:
@@ -227,6 +225,7 @@ class StackOverflow extends StackOverflowInterface with Serializable:
     val part2 = (v1._2 - v2._2).toDouble * (v1._2 - v2._2)
     part1 + part2
 
+
   /** Return the euclidean distance between two points */
   def euclideanDistance(a1: Array[(Int, Int)], a2: Array[(Int, Int)]): Double =
     assert(a1.length == a2.length)
@@ -236,6 +235,7 @@ class StackOverflow extends StackOverflowInterface with Serializable:
       sum += euclideanDistance(a1(idx), a2(idx))
       idx += 1
     sum
+
 
   /** Return the center that is the closest to `p` */
   def findClosest(p: (Int, Int), centers: Array[(Int, Int)]): (Int, Int) =
@@ -262,9 +262,6 @@ class StackOverflow extends StackOverflowInterface with Serializable:
       count += 1
     ((comp1 / count).toInt, (comp2 / count).toInt)
 
-
-
-
   //
   //
   //  Displaying results:
@@ -279,9 +276,6 @@ class StackOverflow extends StackOverflowInterface with Serializable:
     else (sortedList(size / 2) + sortedList((size / 2) - 1))/ 2
 
   def clusterData(cluster: Iterable[(LangIndex, HighScore)]): (String, Double, Int, Int) = {
-
-
-
     val (mostCommonIndex, mostCommonOccurrences) =
       cluster.map(v => (v._1, 1))
         .groupBy(_._1)
