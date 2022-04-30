@@ -129,7 +129,7 @@ object TimeUsage extends TimeUsageInterface:
 
     val ageProjection: Column =
       when(
-        col("teage") > 14 && col("teage") < 23, "young"
+        col("teage") > 14 && col("teage") <= 22, "young"
       ).when(
         col("teage") > 22 && col("teage") < 56, "active"
       ).otherwise("elder").as("age")
@@ -189,9 +189,19 @@ object TimeUsage extends TimeUsageInterface:
     * @param viewName Name of the SQL view to use
     */
   def timeUsageGroupedSqlQuery(viewName: String): String =
-    "SELECT working, sex, age, ROUND(AVG(work), 1) AS work, ROUND(AVG(other), 1) AS other, ROUND(AVG(primaryNeeds), 1) AS primaryNeeds FROM "
-      + viewName + " GROUP BY working, age, sex" +
-      " ORDER BY working, sex, age, primaryNeeds, work, other"
+    s"""
+      |SELECT
+      | working,
+      | sex,
+      | age,
+      | ROUND(AVG(primaryNeeds), 1) AS primaryNeeds,
+      | ROUND(AVG(work), 1) AS work,
+      | ROUND(AVG(other), 1) AS other
+      |FROM $viewName
+      | GROUP BY working, age, sex
+      | ORDER BY working, sex, age
+      |""".stripMargin
+
 
   /**
     * @return A `Dataset[TimeUsageRow]` from the “untyped” `DataFrame`
@@ -218,9 +228,9 @@ object TimeUsage extends TimeUsageInterface:
     summed
       .groupBy($"working", $"sex", $"age")
       .agg(
-          round(avg(col("primaryNeeds"))).as("primaryNeeds"),
-          round(avg(col("work")) ).as("work"),
-          round(avg(col("other"))).as("other")
+          round(avg(col("primaryNeeds")), 1).as("primaryNeeds"),
+          round(avg(col("work")), 1).as("work"),
+          round(avg(col("other")), 1).as("other")
       ).orderBy($"working", $"sex", $"age")
       .as[TimeUsageRow]
 
